@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>global dan lokal scope</title>
+</head>
+<body>
+    
+</body>
+</html><script>
+// Variabel dalam global scope
+let globalVar = "Saya berada di global scope";
+
+function contohScope() {
+    // Variabel dalam local scope
+    let localVar = "Saya berada di local scope";
+    
+    console.log(globalVar);  
+    console.log(localVar); 
+}
+
+contohScope();
+
+console.log(globalVar);
+console.log(localVar); 
+</script>
+</html>
