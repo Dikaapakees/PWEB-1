@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pengelolaan Loker</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f9;
+        }
+        h1 {
+            text-align: center;
+            padding: 20px;
+        }
+        .container {
+            width: 80%;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        table {
+            width: 100%;
+            margin-top: 20px;
+            border-collapse: collapse;
+        }
+        table, th, td {
+            border: 1px solid #ddd;
+        }
+        th, td {
+            padding: 10px;
+            text-align: left;
+        }
+        .form-container {
+            margin-bottom: 20px;
+        }
+        input, textarea {
+            width: 100%;
+            padding: 8px;
+            margin: 5px 0;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #a69bc0;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #6b4caf;
+        }
+    </style>
+</head>
+<body>
+    <h1>Lowongan Kerja</h1>
+    <div class="container">
+        <div class="form-container">
+            <h2>Tambah Lowongan Kerja</h2>
+            <form id="addJobForm">
+                <input type="text" id="title" placeholder="Judul Pekerjaan" required>
+                <textarea id="description" placeholder="Deskripsi Pekerjaan" required></textarea>
+                <input type="text" id="location" placeholder="Lokasi" required>
+                <button type="submit">Tambah Lowongan</button>
+            </form>
+        </div>
+        
+        <div class="form-container">
+            <h2>Cari Lowongan Kerja</h2>
+            <input type="text" id="searchInput" placeholder="Cari berdasarkan judul pekerjaan atau lokasi">
+            <button onclick="searchJobs()">Cari</button>
+        </div>
+
+        <div class="form-container">
+            <h2>Daftar Lowongan Kerja</h2>
+            <table id="jobTable">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Judul Pekerjaan</th>
+                        <th>Deskripsi</th>
+                        <th>Lokasi</th>
+                        <th>Status</th>
+                        <th>Aksi</th>
+                    </tr>
+                </thead>
+                <tbody>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <footer>
+        <center><p>&copy;Dika suganda</p></center>
+    </footer>
+
+    <script>
+        const apiUrl = 'https://script.google.com/macros/s/AKfycbx2e6X7Ks5eAKKCm_84ilou-doSlxVumFcG8CcgOBkNdHuJrRCi68XUukXCc0q3h7e_Ew/exec'; 
+        
+        async function fetchJobs() {
+            const response = await fetch(`${apiUrl}?action=list`);
+            const jobs = await response.json();
+            const tableBody = document.querySelector('#jobTable tbody');
+            tableBody.innerHTML = '';
+            jobs.forEach(job => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${job.id}</td>
+                    <td>${job.title}</td>
+                    <td>${job.description}</td>
+                    <td>${job.location}</td>
+                    <td>${job.status}</td>
+                    <td>
+                        <button onclick="editJob(${job.id})">Edit</button>
+                        <button onclick="deleteJob(${job.id})">Hapus</button>
+                    </td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+
+        document.getElementById('addJobForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const title = document.getElementById('title').value;
+            const description = document.getElementById('description').value;
+            const location = document.getElementById('location').value;
+            
+            const response = await fetch(apiUrl, {
+                method: 'POST',
+                body: new URLSearchParams({
+                    action: 'add',
+                    title,
+                    description,
+                    location
+                })
+            });
+            const result = await response.json();
+            alert(result.message || 'Lowongan berhasil ditambahkan');
+            fetchJobs();
+        });
+
+        async function deleteJob(id) {
+            const response = await fetch(apiUrl, {
+                method: 'POST',
+                body: new URLSearchParams({
+                    action: 'delete',
+                    id
+                })
+            });
+            const result = await response.json();
+            alert(result.message || 'Lowongan berhasil dihapus');
+            fetchJobs();  
+        }
+
+        async function editJob(id) {
+            const title = prompt('Judul Pekerjaan:');
+            const description = prompt('Deskripsi Pekerjaan:');
+            const location = prompt('Lokasi:');
+            const status = prompt('Status (Aktif/Ditutup):');
+            if (title && description && location && status) {
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    body: new URLSearchParams({
+                        action: 'update',
+                        id,
+                        title,
+                        description,
+                        location,
+                        status
+                    })
+                });
+                const result = await response.json();
+                alert(result.message || 'Lowongan berhasil diperbarui');
+                fetchJobs();
+            }
+        }
+
+        function searchJobs() {
+            const searchInput = document.getElementById('searchInput').value.toLowerCase();
+            const rows = document.querySelectorAll('#jobTable tbody tr');
+            
+            rows.forEach(row => {
+                const title = row.children[1].innerText.toLowerCase();
+                const location = row.children[3].innerText.toLowerCase();
+                if (title.includes(searchInput) || location.includes(searchInput)) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        }
+
+        window.onload = fetchJobs;
+    </script>
+</body>
+</html>
